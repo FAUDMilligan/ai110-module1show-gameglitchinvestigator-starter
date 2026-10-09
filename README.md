@@ -25,9 +25,24 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+- [x] Describe the game's purpose.
+- [x] Detail which bugs you found.
+- [x] Explain what fixes you applied.
+
+**Purpose:** A Streamlit number-guessing game. The player picks a difficulty, then guesses a secret number within that range, getting "higher" or "lower" hints after each guess. Each difficulty allows a set number of attempts, and the score depends on how quickly the player wins.
+
+**Bugs found:**
+
+1. **The hints were backwards.** A guess that was too high said "Go HIGHER!", and a guess that was too low said "Go LOWER!"
+2. **The secret changed type on every other guess.** On even-numbered attempts, `app.py` turned the secret into a string (`str(st.session_state.secret)`) before checking the guess. Comparing an int to a string raised a `TypeError`, and the fallback code then compared both as text. Text is compared character by character, so `"9" > "10"` is true. As a result, a guess of 9 against a secret of 10 was called "Too High", and the outcome of a guess could depend on which attempt it was.
+3. **The tests didn't match the code.** `check_guess` returns an `(outcome, message)` pair, but the tests compared the whole result to a single string such as `"Win"`, so they could never pass.
+
+**Fixes applied:**
+
+1. Swapped the hint messages, so "Too High" now says "Go LOWER!" and "Too Low" now says "Go HIGHER!"
+2. Removed the even-attempt string conversion in `app.py`, so the real integer secret is always passed in. `check_guess` now converts both values with `int()` and compares them as numbers, and the `try/except` text fallback is gone.
+3. Moved `get_range_for_difficulty`, `parse_guess`, `check_guess` and `update_score` from `app.py` into `logic_utils.py`, and changed `app.py` to import them.
+4. Updated the existing tests to unpack `outcome, _ = check_guess(...)`, and added regression tests for the hint direction and for a string secret (`check_guess(9, "10")` must be "Too Low").
 
 ## 📸 Demo Walkthrough
 
